@@ -1,10 +1,12 @@
-
 var connect = require('../');
 
 var fixtures = __dirname + '/fixtures';
 
 var app = connect();
 app.use(connect.static(fixtures));
+
+var appDefaultsConfigured = connect();
+app.use(connect.static(fixtures, {defaults: ['todo.txt', 'index.html']}));
 
 describe('connect.static()', function(){
   it('should serve static files', function(done){
@@ -41,6 +43,23 @@ describe('connect.static()', function(){
     app.request()
     .get('/users')
     .expect(301, done);
+  })
+  
+  describe('When default documents are configured ', function(done) {
+    it('should redirect first preference when available', function(done) {
+      appDefaultsConfigured.request()
+      .get('/')
+      .expect('- groceries', done);
+    })
+    
+    it('should fall back to latter preferences', function(done) {
+      appDefaultsConfigured.request()
+      .get('/users/')
+      .end(function(res){
+        res.body.should.equal('<p>tobi, loki, jane</p>');
+        done();
+      })
+    })
   })
 
   it('should support index.html', function(done){
